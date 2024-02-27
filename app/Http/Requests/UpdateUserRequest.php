@@ -23,9 +23,13 @@ class UpdateUserRequest extends FormRequest
     {
         return [
             'name' => 'string',
-            'email' => 'email',
+            'email' => 'email|unique:users,email,' . $this->id,
             'password' => 'string',
-            'address_id' => 'integer',
+            'address.street' => 'string',
+            'address.number' => 'integer',
+            'address.zip' => 'string',
+            'address.complement' => 'string',
+            'address.city.id' => 'integer|exists:cities,id',
         ];
     }
 }

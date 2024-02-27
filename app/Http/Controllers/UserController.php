@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
+use App\Models\City;
 use App\Models\User;
+use App\Models\Address;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class UserController extends Controller
 {
@@ -17,52 +20,70 @@ class UserController extends Controller
 
         return $this->response($users);
     }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
     /**
      * Store a newly created resource in storage.
      */
     public function store(StoreUserRequest $request)
     {
-        //
+        $data = $request->validated();
+        $user = User::create($data);
+
+        $address = Address::create($data['address']);
+
+        $user->address()->associate($address);
+        $user->save();
+
+        return $this->response($user);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(User $user)
+    public function show(string $id)
     {
-        return $this->response($user);
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(User $user)
-    {
-        //
+        try{
+            return $this->response(User::findOrFail($id));
+        } catch(ModelNotFoundException $e){
+            return $this->response(["message"=> "Usuario nao encontrado"],404);
+        }
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateUserRequest $request, User $user)
+    public function update(UpdateUserRequest $request, string $id)
     {
+        try{
+            $data = $request->validated();
 
+            $user = User::findOrFail($id);
+            $user->update($data);
+
+            $user->address->update($data['address']);
+
+            $city = City::find($data['address']['city']['id']);
+
+            $user->address->city()->associate($city);
+            $user->address->save();
+
+            return $this->response($user);
+        } catch(ModelNotFoundException $e){
+            return $this->response(['message'=> 'Usuario nao encontrado'], 404);
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(User $user)
+    public function delete(string $id)
     {
-        //
+        try{
+            $user = User::findOrFail($id);
+            $user->delete();
+
+            return $this->response(['messsage' => 'Usuario deletado com sucesso'], 200);
+        } catch(ModelNotFoundException $e){
+            return $this->response(['message'=> 'Usuario nao encontrado'],404);
+        }
     }
 }

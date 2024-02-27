@@ -11,7 +11,7 @@ class StoreUserRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,14 @@ class StoreUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'name' => 'string',
+            'email' => 'email|unique:users,email',
+            'password' => 'string',
+            'address.street' => 'string',
+            'address.number' => 'integer',
+            'address.zip' => 'string',
+            'address.complement' => 'string',
+            'address.city.id' => 'integer|exists:cities,id',
         ];
     }
 }
